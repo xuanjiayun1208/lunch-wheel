@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>中午吃什么？转盘</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 40px;
+    }
+    canvas {
+      border: 4px solid #444;
+      border-radius: 50%;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin-top: 20px;
+    }
+    h2 {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎡 中午吃什么？</h1>
+  <canvas id="wheel" width="500" height="500"></canvas>
+  <br>
+  <button onclick="spinWheel()">转起来！</button>
+  <h2 id="result"></h2>
+
+  <script>
+    const restaurants = [
+      "金掌勺", "香河肉饼", "炼炼有意思", "滇大池", "客哪呢", "椒爱", "松鹤楼",
+      "海底捞", "费大厨", "小渝府", "很久以前", "亚惠", "西贝", "南昌拌粉",
+      "全牛匠", "船歌水饺", "澜海邑", "川成元", "温野菜", "幽湘谷", "烤匠",
+      "夺夺粉", "川百汇", "眉州东坡", "汤城小厨", "米村", "小满粉", "喜家德",
+      "点卯", "砂锅粥", "醉面", "日昌", "和府", "阿婆春饼", "马氏牛肉面",
+      "袁记云饺", "李记牛羊肉", "羊大福", "哈利牛肉面", "滨家烤鱼",
+      "张亮麻辣烫", "盈福", "撒拉花儿"
+    ];
+
+    const canvas = document.getElementById("wheel");
+    const ctx = canvas.getContext("2d");
+    const center = canvas.width / 2;
+    const radius = center - 10;
+    const anglePerSection = 2 * Math.PI / restaurants.length;
+    let currentAngle = 0;
+    let spinning = false;
+
+    function drawWheel() {
+      for (let i = 0; i < restaurants.length; i++) {
+        const startAngle = currentAngle + i * anglePerSection;
+        const endAngle = startAngle + anglePerSection;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, startAngle, endAngle);
+        ctx.fillStyle = randomColor(i);
+        ctx.fill();
+        ctx.stroke();
+
+        // 文本
+        const textAngle = startAngle + anglePerSection / 2;
+        const x = center + (radius - 50) * Math.cos(textAngle);
+        const y = center + (radius - 50) * Math.sin(textAngle);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(textAngle);
+        ctx.textAlign = "center";
+        ctx.fillStyle = "black";
+        ctx.font = "14px Arial";
+        ctx.fillText(restaurants[i], 0, 0);
+        ctx.restore();
+      }
+
+      // 指针
+      ctx.beginPath();
+      ctx.moveTo(center - 10, center - radius + 10);
+      ctx.lineTo(center, center - radius - 10);
+      ctx.lineTo(center + 10, center - radius + 10);
+      ctx.fillStyle = "red";
+      ctx.fill();
+    }
+
+    function randomColor(i) {
+      const hue = (i * 360 / restaurants.length) % 360;
+      return `hsl(${hue}, 70%, 70%)`;
+    }
+
+    function spinWheel() {
+      if (spinning) return;
+      spinning = true;
+
+      let totalRotation = Math.random() * 3600 + 1800; // 1800~5400度
+      let currentRotation = 0;
+      let speed = 20;
+
+      function animate() {
+        currentRotation += speed;
+        if (currentRotation >= totalRotation) {
+          spinning = false;
+          currentAngle += (totalRotation * Math.PI / 180);
+          currentAngle %= 2 * Math.PI;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawWheel();
+
+          const index = restaurants.length - Math.floor((currentAngle % (2 * Math.PI)) / anglePerSection) - 1;
+          const result = restaurants[(index + restaurants.length) % restaurants.length];
+          document.getElementById("result").innerText = `🎯 今天吃：${result}`;
+          return;
+        }
+
+        currentAngle += (speed * Math.PI / 180);
+        currentAngle %= 2 * Math.PI;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawWheel();
+        speed *= 0.98;
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    }
+
+    drawWheel();
+  </script>
+</body>
+</html>
